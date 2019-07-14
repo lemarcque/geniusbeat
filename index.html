@@ -14,6 +14,7 @@
 				<!-- header -->
 				<header id="app-header">
 					<button id="btn-edit" class="button-action">Edit Lyrics</button>
+					<button id="btn-save" class="button-action">Save</button>
 					<button id="btn-cancel" class="button-action">Cancel</button>
 					<button id="btn-record" class="button-action">Record</button>
 					<button id="btn-play" class="button-action">Play</button>
@@ -24,6 +25,23 @@
 					<p id="lyrics-viewer"></p>
 					<textarea id="lyrics-textarea"  onkeyup="textAreaAdjust(this)"></textarea>
 				</section>
+			</div>
+			<div id="preview-container">
+
+				<!-- Message -->
+				<div id="preview-message-container">
+					<h1>WELCOME TO GENIUS.</h1>
+					<span class="separator"></span>
+					<p>The world's biggest collection of song lyrics and textual knowledge</p>
+				</div>
+
+				<!-- Button -->
+				<div>
+					<button id="btn-new" class="button-action">New</button>
+					<button id="btn-open" class="button-action">Open</button>
+				</div>
+
+				<input type=file id="input-file">
 			</div>
 		</div>
 

@@ -15,12 +15,14 @@ button, p {
 /* main container */
 #main-container {
 	background: #f7f7f7;
+	height: 100%;
 	width: 100%;
 }
 
 /* white container */
 #app-container {
 	background: white;
+	display: none;
 	height: 100%;
 	margin: 0 auto;
 	padding: 20px;
@@ -65,17 +67,67 @@ button, p {
 	background: rgb(0, 0, 0, 0.08);
 }
 
+/* referent in viewer */
 .referent {
 	background: white;
 	padding-top: 2px;
 	padding-bottom: 2px;
 }
 
+/* referent currently highlighted */
 .referent-live {
 	background: #e9e9e9;
 }
 
+/* overing highlighted referent */
 .referent-live:hover {
 	background: #ffff64;
 	cursor: pointer;
+}
+
+/* yellow page */
+#preview-container {
+	background: #ffff64;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+}
+
+/* set text settings */
+#preview-container p, h1 {
+	font-family: sans-serif;
+	text-align: center;
+}
+
+/* title in preview */
+#preview-container h1 {
+	margin-bottom: 13px;
+}
+
+/* paragraph in preview */
+#preview-container p {
+	margin-top: 13px;
+}
+
+/* div that contains text */
+#preview-message-container {
+	width: 270px;
+}
+
+/* input (file) element */
+#input-file {
+	display: none;
+	width: 0px;
+	height: 0px
+}
+
+/* line divider */
+.separator {
+	display: block;
+	height: 2px;
+	width: 100%;
+	background-color: black;
 }
