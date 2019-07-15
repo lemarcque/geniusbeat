@@ -48,7 +48,6 @@ function displayEditArea() {
 }
 
 function updateLyrics() {
-	lyrics = view.area.value;
 	var data = lyrics.split("\n");
 
 	// remove all childs
@@ -68,6 +67,8 @@ function updateLyrics() {
 			}else {
 				span.className = "referent"
 			}
+
+			splittedLyrics
 			view['viewer'].appendChild(span)
 		}else {
 			var br = document.createElement("br");
@@ -152,7 +153,7 @@ function start() {
 	btn['cancel'].addEventListener("click", function (e) { displayViewer(); });
 	btn['record'].addEventListener("click", function (e) { if(mode != "RECORDING") { mode = "RECORDING"; recordingSound(); } });
 	btn['play'].addEventListener("click", function (e) { if(mode != "PLAYING") { mode = "PLAYING"; playSound(); } });
-	btn['save'].addEventListener("click", function (e) { if(mode != "PLAYING") { updateLyrics(); displayViewer();  } });
+	btn['save'].addEventListener("click", function (e) { if(mode != "PLAYING") { lyrics = view.area.value; updateLyrics(); displayViewer();  } });
 }
 
 /**
@@ -182,10 +183,15 @@ function init() {
 			    	reader.readAsText(file, 'UTF-8');
 
 			        reader.onload = (evt) => {
-			          console.log(evt.target.result);
-			          lyrics = JSON.parse(evt.target.result);
+			          data = JSON.parse(evt.target.result);
+			          data.forEach(function(element) {
+			          	lyrics += element['referent'] + "\n";
+			          	if(element['time'] != undefined) recordedReferentTime.push(element['time']);
+			         });
+
 			          fileName = e.target.value.split("\\").pop()
 	  			  	  start();
+	  			  	  updateLyrics();
 			        };
 			        
 			        reader.onerror = (evt) => {
@@ -204,10 +210,25 @@ function init() {
 
 function exportData(anchor) {
 	// pause music
-	audio.pause();
+	if(audio != undefined) audio.pause();
+
+
+	// create json file
+	var raw = [];
+	var referentList = view['viewer'].querySelectorAll('span');
+	for(var i = 0; i < referentList.length; i++) {
+		var obj = { "referent" : referentList[i].innerHTML.split('<br>')[0] }
+		if(referentList[i] .className != "lyrics-separator") {
+			if(recordedReferentTime[i] != undefined) {
+				obj['time'] = recordedReferentTime[i];
+			}
+		}
+		
+		raw.push(obj);
+	}
 
     var exportedFilename = "test.txt";
-    var data = JSON.stringify(recordedReferentTime);
+    var data = JSON.stringify(raw);
     var svg_blob = new Blob([data], {'type': "text/plain"});
     var url = URL.createObjectURL(svg_blob);
 
@@ -224,6 +245,7 @@ var referents;
 var pointer = 0;	// pointer for the 
 
 var lyrics = ""	// lyrics saved in raw format with carriage return (\n)
+var splittedLyrics = [];
 var fileName = "";
 var audio;		// Audio element to instantiate
 
