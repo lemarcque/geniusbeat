@@ -8,12 +8,17 @@
 	*********************************
 */		
 
-/* auto resize */
+/* adjust height of area for automatically
+ *  resize based on content.
+*/
 function textAreaAdjust(o) {
  	o.style.height = "1px";
  	o.style.height = (25 + o.scrollHeight) + "px";
 }
 
+/*
+ * Display lyrics with no edit features
+ */
 function displayViewer() {
 	view['area'].style.display = "none";
 	btn['cancel'].style.display = "none";
@@ -21,9 +26,13 @@ function displayViewer() {
 	btn['record'].style.display = "inline";
 	btn['play'].style.display = "inline";
 	btn['save'].style.display = "none";
+	if(lyrics.length > 0) btn['export'].style.display = "inline";
 	view['viewer'].style.display = "block";
 }
 
+/*
+ * Display lyrics with no features
+ */
 function displayEditArea() {
 	view['viewer'].style.display = "none";
 	btn['save'].style.display = "inline";
@@ -31,9 +40,11 @@ function displayEditArea() {
 	btn['edit'].style.display = "none";
 	btn['record'].style.display = "none";
 	btn['play'].style.display = "none";
+	btn['export'].style.display = "none";
 	view['area'].style.display = "block";
+
+	// set lyrics and 
 	view['area'].value = lyrics.replace(/<br *\/?>/gi, '\n');
-	textAreaAdjust(view['area']);
 }
 
 function updateLyrics() {
@@ -105,7 +116,7 @@ function nextReferent() {
 		if(pointer < referents.length) {
 			switchReferentPos(pointer);
 			referentTime.push(audio.currentTime)
-			recordedReferentTime = referentTime; 	// temp for testing
+			enableExportFeature();
 			pointer++;
 		}
 	}
@@ -121,10 +132,16 @@ function closePreviewPage() {
 	document.querySelector('#app-container').style.display = "block";
 }
 
+function enableExportFeature() {
+	recordedReferentTime = referentTime; 	// temp for testing
+	btn['export'].style.display = "inline";
+}
+
 /**
  * Called when a file has been correctly selected.
 */
 function start() {
+
 	// display views
 	displayViewer();
 	closePreviewPage();
@@ -133,37 +150,73 @@ function start() {
 	document.addEventListener('keyup', logKey);
 	btn['edit'].addEventListener("click", function (e) { mode = "EDITING"; displayEditArea(); });
 	btn['cancel'].addEventListener("click", function (e) { displayViewer(); });
-	btn['record'].addEventListener("click", function (e) { if(mode != "RECORDING") { mode = "RECORDING"; isRecording = true; recordingSound(); } });
-	btn['play'].addEventListener("click", function (e) { if(mode != "PLAYING") { mode = "PLAYING"; isPlaying = true; playSound(); } });
-	btn['save'].addEventListener("click", function (e) { if(mode != "PLAYING") { displayViewer(); updateLyrics(); } });
+	btn['record'].addEventListener("click", function (e) { if(mode != "RECORDING") { mode = "RECORDING"; recordingSound(); } });
+	btn['play'].addEventListener("click", function (e) { if(mode != "PLAYING") { mode = "PLAYING"; playSound(); } });
+	btn['save'].addEventListener("click", function (e) { if(mode != "PLAYING") { updateLyrics(); displayViewer();  } });
 }
 
 /**
  * Initiation of the application.
 */
 function init() {
-	//mode = "EDITING";
 
 	document.querySelector("#input-file").onchange = function(e) {
 		 // verify extension
 		 var testPath = e.target.value;
-	  	if(testPath.split(".").pop() != "mp3") {
-	  		console.log("Files selected must be in mp3 format !");
-	  	}else {
-	  		fileName = e.target.value.split("\\").pop()
-	  		start();
-	  	}
+
+		 switch(mode) {
+		 	case "SELECT-NEW":
+		 		if(testPath.split(".").pop() != "mp3") {
+	  				alert("Files selected must be in mp3 format !");
+	  			}else {
+	  				fileName = e.target.value.split("\\").pop()
+	  				start();
+				}
+
+		 		break;
+
+		 	case "SELECT-OPEN":
+		 		const file = e.target.files[0];
+		 		if (file) {
+			     	const reader = new FileReader();
+			    	reader.readAsText(file, 'UTF-8');
+
+			        reader.onload = (evt) => {
+			          console.log(evt.target.result);
+			          lyrics = JSON.parse(evt.target.result);
+			          fileName = e.target.value.split("\\").pop()
+	  			  	  start();
+			        };
+			        
+			        reader.onerror = (evt) => {
+			          console.error('Failed to read this file');
+			        };
+			      }
+		 		break;
+		 }
+
+		 	
 	};
 
-	document.querySelector('#btn-new').addEventListener('click', function() { document.querySelector('#input-file').click(); });
-	document.querySelector('#btn-open').addEventListener('click', function() { });
+	document.querySelector('#btn-new').addEventListener('click', function() { mode = "SELECT-NEW"; document.querySelector('#input-file').click(); });
+	document.querySelector('#btn-open').addEventListener('click', function() { mode = "SELECT-OPEN"; document.querySelector('#input-file').click(); });
+}
 
+function exportData(anchor) {
+	// pause music
+	audio.pause();
+
+    var exportedFilename = "test.txt";
+    var data = JSON.stringify(recordedReferentTime);
+    var svg_blob = new Blob([data], {'type': "text/plain"});
+    var url = URL.createObjectURL(svg_blob);
+
+    anchor.href = url;
+    anchor.download = exportedFilename;
 }
 
 // init variables
 var mode = ""; // EDITING / PLAYING / RECORDING
-var isPlaying = false;
-var isRecording = false;
 var referentTime = [];
 var pointerReferentTime = 0;
 var recordedReferentTime = [];
@@ -185,7 +238,8 @@ var btn = {
 	'cancel': document.querySelector("#btn-cancel"),
 	'record': document.querySelector("#btn-record"),
 	'play': document.querySelector("#btn-play"),
-	'save': document.querySelector("#btn-save")
+	'save': document.querySelector("#btn-save"),
+	'export': document.querySelector("#btn-export")
 }
 
 

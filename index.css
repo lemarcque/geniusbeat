@@ -124,6 +124,14 @@ button, p {
 	height: 0px
 }
 
+#hyperlink-export {
+	text-decoration: none;
+}
+
+#btn-export {
+	display: none;
+}
+
 /* line divider */
 .separator {
 	display: block;
