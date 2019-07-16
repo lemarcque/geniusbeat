@@ -119,6 +119,7 @@ function nextReferent() {
 			referentTime.push(audio.currentTime)
 			enableExportFeature();
 			pointer++;
+			console.log('OP!');
 		}
 	}
 }
@@ -136,6 +137,35 @@ function closePreviewPage() {
 function enableExportFeature() {
 	recordedReferentTime = referentTime; 	// temp for testing
 	btn['export'].style.display = "inline";
+}
+
+function exportData(anchor) {
+	// pause music
+	if(audio != undefined) audio.pause();
+
+
+	// create json file
+	var raw = [];
+	var referentList = view['viewer'].querySelectorAll('span');
+	var pointerAppend = 0;
+	for(var i = 0; i < referentList.length; i++) {
+		var obj = { "referent" : referentList[i].innerHTML.split('<br>')[0] }
+		if(referentList[i] .className != "lyrics-separator") {
+			if(recordedReferentTime[pointerAppend] != undefined) {
+				obj['time'] = recordedReferentTime[pointerAppend];
+				pointerAppend++;
+			}
+		}
+		raw.push(obj);
+	}
+
+    var exportedFilename = "test.txt";
+    var data = JSON.stringify(raw);
+    var svg_blob = new Blob([data], {'type': "text/plain"});
+    var url = URL.createObjectURL(svg_blob);
+
+    anchor.href = url;
+    anchor.download = exportedFilename;
 }
 
 /**
@@ -208,33 +238,7 @@ function init() {
 	document.querySelector('#btn-open').addEventListener('click', function() { mode = "SELECT-OPEN"; document.querySelector('#input-file').click(); });
 }
 
-function exportData(anchor) {
-	// pause music
-	if(audio != undefined) audio.pause();
 
-
-	// create json file
-	var raw = [];
-	var referentList = view['viewer'].querySelectorAll('span');
-	for(var i = 0; i < referentList.length; i++) {
-		var obj = { "referent" : referentList[i].innerHTML.split('<br>')[0] }
-		if(referentList[i] .className != "lyrics-separator") {
-			if(recordedReferentTime[i] != undefined) {
-				obj['time'] = recordedReferentTime[i];
-			}
-		}
-		
-		raw.push(obj);
-	}
-
-    var exportedFilename = "test.txt";
-    var data = JSON.stringify(raw);
-    var svg_blob = new Blob([data], {'type': "text/plain"});
-    var url = URL.createObjectURL(svg_blob);
-
-    anchor.href = url;
-    anchor.download = exportedFilename;
-}
 
 // init variables
 var mode = ""; // EDITING / PLAYING / RECORDING
