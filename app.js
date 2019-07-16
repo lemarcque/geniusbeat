@@ -57,9 +57,11 @@ function updateLyrics() {
 
 	data.forEach(function(element) {
 
+		var span = document.createElement("span");
+
 		if(element.length > 0) {
 
-			var span = document.createElement("span");
+			
 			span.innerHTML = element + "<br>"
 			
 			if(element.includes("[") && element.includes("]")) {
@@ -72,7 +74,9 @@ function updateLyrics() {
 			view['viewer'].appendChild(span)
 		}else {
 			var br = document.createElement("br");
-			view['viewer'].appendChild(br);
+			span.className = "carriage-return";
+			span.appendChild(br)
+			view['viewer'].appendChild(span);
 		}
 	});
 
@@ -104,14 +108,12 @@ function playSound() {
    		}
 	};
 	audio.play();
-} 
-
-function logKey(e) {
-	if(e.code == "Enter") {
-		nextReferent();
-	}
 }
 
+/*
+ * Add time reference to a referent
+ * and move the pointer for the next one.
+ */
 function nextReferent() {
 	if(mode == "RECORDING") {
 		if(pointer < referents.length) {
@@ -119,16 +121,22 @@ function nextReferent() {
 			referentTime.push(audio.currentTime)
 			enableExportFeature();
 			pointer++;
-			console.log('OP!');
+
 		}
 	}
 }
 
+/**
+ * Change the referent that must be highlighted.
+ */
 function switchReferentPos(position) {
 	if(position > 0) referents[position - 1].className = "referent";
 	referents[position].className ="referent-live";
 }
 
+/**
+ * Hide the preview page
+ */
 function closePreviewPage() {
 	document.querySelector('#preview-container').style.display = "none";
 	document.querySelector('#app-container').style.display = "block";
@@ -143,19 +151,23 @@ function exportData(anchor) {
 	// pause music
 	if(audio != undefined) audio.pause();
 
-
 	// create json file
 	var raw = [];
 	var referentList = view['viewer'].querySelectorAll('span');
 	var pointerAppend = 0;
 	for(var i = 0; i < referentList.length; i++) {
-		var obj = { "referent" : referentList[i].innerHTML.split('<br>')[0] }
-		if(referentList[i] .className != "lyrics-separator") {
+
+		var tag = referentList[i].className;
+		var obj = { }
+		obj[tag] = referentList[i].innerHTML.split('<br>')[0];
+
+		if(referentList[i] .className == "referent" || referentList[i] .className == "referent-live") {
 			if(recordedReferentTime[pointerAppend] != undefined) {
 				obj['time'] = recordedReferentTime[pointerAppend];
 				pointerAppend++;
 			}
 		}
+
 		raw.push(obj);
 	}
 
@@ -178,7 +190,7 @@ function start() {
 	closePreviewPage();
 
 	// set event listener
-	document.addEventListener('keyup', logKey);
+	document.addEventListener('keyup', function(e) { if(e.code == "Enter") { nextReferent(); } });
 	btn['edit'].addEventListener("click", function (e) { mode = "EDITING"; displayEditArea(); });
 	btn['cancel'].addEventListener("click", function (e) { displayViewer(); });
 	btn['record'].addEventListener("click", function (e) { if(mode != "RECORDING") { mode = "RECORDING"; recordingSound(); } });
@@ -213,10 +225,14 @@ function init() {
 			    	reader.readAsText(file, 'UTF-8');
 
 			        reader.onload = (evt) => {
+
+			          var index = 0;
 			          data = JSON.parse(evt.target.result);
 			          data.forEach(function(element) {
-			          	lyrics += element['referent'] + "\n";
+			          	lyrics += Object.entries(element)[0][1];
+			          	if(data[index + 1] != undefined) lyrics += "\n";
 			          	if(element['time'] != undefined) recordedReferentTime.push(element['time']);
+			          	index++;
 			         });
 
 			          fileName = e.target.value.split("\\").pop()
@@ -237,7 +253,6 @@ function init() {
 	document.querySelector('#btn-new').addEventListener('click', function() { mode = "SELECT-NEW"; document.querySelector('#input-file').click(); });
 	document.querySelector('#btn-open').addEventListener('click', function() { mode = "SELECT-OPEN"; document.querySelector('#input-file').click(); });
 }
-
 
 
 // init variables
